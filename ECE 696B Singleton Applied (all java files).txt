@@ -1,0 +1,301 @@
+//____________________________Logger_______________________________
+package edu.baylor.ecs.csi5354.creational.singleton;
+
+/**
+ * Student: Valeria M Villarino
+ * Assignment: Singleton for ECE 696B, summer 2026
+ * Professor: Tomas Cerny
+ * 
+ * Basic logger simulation
+ * 
+ */
+public interface Logger {
+
+	void log(String s);
+
+    // Nested holder class to ensure initialization
+    class InstanceHolder {
+        private static final Logger INSTANCE = new LoggerImpl();
+    }
+
+    // The global access point used by the rest of the application
+    static Logger getInstance() {
+        return LoggerImpl.getInstance();
+        }
+}
+
+//_________________________________LoggerImpl__________________________
+package edu.baylor.ecs.csi5354.creational.singleton.impl;
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.baylor.ecs.csi5354.creational.singleton.Logger;
+
+/**
+ * Student: Valeria M Villarino
+ * Assignment: Singleton for ECE 696B, summer 2026
+ * Professor: Tomas Cerny
+ * 
+ */
+
+public class LoggerImpl implements Logger {
+
+	private static LoggerImpl instance;
+	private static int counter = 1;
+	private int id;
+	//private Class<?> c;
+	private List<String> files = new ArrayList<>();
+
+	/** public LoggerImpl(Class<?> c) {
+		this.c = c;
+		id = counter++;
+		log("Made logger "+id );
+	} */
+
+    private LoggerImpl() {
+        this.id = counter++;
+        log("Made logger " + id);
+        //System.out.printIn("Made logger" + id);
+    }
+    
+    
+    public static synchronized LoggerImpl getInstance() {
+        if (instance == null) {
+            instance = new LoggerImpl();
+        }
+        return instance;
+    } 
+
+	/* (non-Javadoc)
+	 * @see cz.cvut.fel.cs.ass.Logger#log(java.lang.String)
+	 */
+	@Override
+	public void log(String s) {
+		files.add(s);
+		System.out.println("Logging [SingletonLogger#" + id + "]: " + s);
+	}
+}
+
+//_______________________Service.java______________________
+package edu.baylor.ecs.csi5354.creational.singleton;
+
+import java.util.Date;
+
+/**
+ * Student: Valeria M Villarino
+ * Assignment: Singleton for ECE 696B, summer 2026
+ * Professor: Tomas Cerny
+ * 
+ */
+
+/**
+ * Interface for the services
+ *
+ */
+public interface Service {
+	
+	/**
+	 * Calculates taxes
+	 * 
+	 * @param amount
+	 * @return taxed amount
+	 */
+	public double taxCalculation(double amount);
+	
+	/**
+	 * Tracking the totals
+	 * 
+	 * @param id
+	 * @param amount
+	 */
+	public void registerSale(int id, double amount);
+	
+	/**
+	 * reporting of given day
+	 * 
+	 * @param day
+	 * @return the total sale sum
+	 */
+	public double dailyReport(Date day);
+	
+	/**
+	 * Time stamp
+	 * 
+	 * @return now
+	 */
+	public Date now();
+}
+
+
+//___________________________________ServiceImpl_____________________________
+package edu.baylor.ecs.csi5354.creational.singleton.impl;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import edu.baylor.ecs.csi5354.creational.singleton.Logger;
+import edu.baylor.ecs.csi5354.creational.singleton.Service;
+
+/**
+ * Student: Valeria M Villarino
+ * Assignment: Singleton for ECE 696B, summer 2026
+ * Professor: Tomas Cerny
+ * 
+ */
+
+public class ServiceImpl implements Service {
+
+    /**
+	*Logger log = new LoggerImpl(ServiceImpl.class);
+
+	public ServiceImpl() {
+		sleep(2000);
+		log.log("initiated");
+	}*/
+	 // a single private static instance tracking field
+    private static ServiceImpl instance;
+
+    // logger to use the new Singleton pattern access point
+    private Logger log = Logger.getInstance();
+
+    // change the constructor visibility to PRIVATE
+    private ServiceImpl() {
+        sleep(2000);
+        log.log("initiated");
+    }
+    
+    // thread-safe global access method
+    public static synchronized ServiceImpl getInstance() {
+        if (instance == null) {
+            instance = new ServiceImpl();
+        }
+        return instance;
+    }
+
+	public double taxCalculation(double amount) {
+		sleep(200);
+		log.log("taxCalculation");
+		return amount * 1.21;
+	}
+
+	public void registerSale(int id, double amount) {
+		// issue registration
+		sleep(50);
+    	Register.getInstance().add(now(), id, amount); 
+        log.log("registerSale " + id);
+	}
+
+	public double dailyReport(Date day) {
+		sleep(1000);
+		log.log("dailyReport");
+		return Register.getInstance().total(now()); // it could be better, fixed
+	}
+
+	private void sleep(int i) {
+		try {
+			Thread.sleep(i);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} // simulation
+	}
+
+	public Date now() {
+		Calendar cal = Calendar.getInstance(); // locale-specific
+		cal.setTime(new Date());
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		return cal.getTime();
+	}
+}
+
+//____________________________SaleCounter___________________________
+
+package edu.baylor.ecs.csi5354.creational.singleton;
+
+/**
+ * Student: Valeria M Villarino
+ * Assignment: Singleton for ECE 696B, summer 2026
+ * Professor: Tomas Cerny
+ * 
+ */
+
+
+/**
+ * Helper class - to a Thread-Safe Singleton
+ */
+public class SaleCounter {
+    
+    // The 'volatile' keyword for visibility across multiple threads instantly
+    private static volatile SaleCounter instance;
+
+    // Initialize counter here and make it private 
+    private int counter = 0;
+
+    // Private constructor prevents accidental 'new SaleCounter()' instantiation
+    private SaleCounter() {}
+
+    // Double-Checked Locking implementation recommendation
+    public static SaleCounter getInstance() {
+        // if initialized, bypass heavy synchronization block entirely
+        if (instance == null) {
+            // lock access on the class level block
+            synchronized (SaleCounter.class) {
+                //no other thread created it while waiting for the lock
+                if (instance == null) {
+                    instance = new SaleCounter();
+                }
+            }
+        }
+        return instance;
+    }
+
+    // Thread-safe increment utility method; 'synchronized' forces threads to line up and increment one by one without data loss
+    public synchronized int getNextId() {
+        return counter++;
+    }
+}
+
+//____________________________Register___________________________
+package edu.baylor.ecs.csi5354.creational.singleton.impl;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+class Register {
+
+	private Map<Date, Double> register = new HashMap<>();
+	private Map<Date, Map<Integer, Double>> registerDetails = new HashMap<>();
+
+	//public static Register instance = new Register();
+	private static final Register instance = new Register();
+
+	private Register() {}
+	
+	public static Register getInstance() {
+        	return instance;
+    	}
+
+
+	public synchronized void add(Date date, int id, Double amount) {
+
+		if (!register.containsKey(date)) {
+			register.put(date, amount);
+		} else {
+			register.put(date, register.get(date) + amount);
+		}
+
+		if (!registerDetails.containsKey(date)) {
+			Map<Integer, Double> registration = new HashMap<>();
+			registerDetails.put(date, registration);
+		}
+		registerDetails.get(date).put(id, amount);
+
+	}
+
+	public synchronized Double total(Date date) {
+		return register.get(date);
+	}
+}
