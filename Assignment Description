@@ -1,0 +1,7 @@
+# This is part of the assigment Singleton for ECE 696B summer 2026, by V. Villarino
+
+#1. Apply Singleton onto ServiceImpl
+#2. Apply Singleton onto Logger
+#3. Apply Singleton onto SaleCounter and consider double checked locking
+#4. Apply Singleton onto Register and synchronize the recording 
+
